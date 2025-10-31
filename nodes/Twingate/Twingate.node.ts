@@ -816,9 +816,10 @@ export class Twingate implements INodeType {
 						const firstName = this.getNodeParameter('firstName', i) as string;
 						const lastName = this.getNodeParameter('lastName', i) as string;
 						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						const role = additionalFields.role as string;
 						query = `
-							mutation CreateUser($email: String!, $firstName: String, $lastName: String) {
-								userCreate(input: { email: $email, firstName: $firstName, lastName: $lastName }) {
+							mutation CreateUser($email: String!, $firstName: String, $lastName: String, $role: String) {
+								userCreate(input: { email: $email, firstName: $firstName, lastName: $lastName, role: $role }) {
 									ok
 									error
 									entity {
@@ -836,15 +837,17 @@ export class Twingate implements INodeType {
 							email,
 							firstName: firstName || undefined,
 							lastName: lastName || undefined,
+							role: role || undefined,
 						};
 					} else if (operation === 'update') {
 						const userId = this.getNodeParameter('userId', i) as string;
 						const firstName = this.getNodeParameter('firstName', i) as string;
 						const lastName = this.getNodeParameter('lastName', i) as string;
 						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						const role = additionalFields.role as string;
 						query = `
-							mutation UpdateUser($id: ID!, $firstName: String, $lastName: String) {
-								userDetailsUpdate(id: $id, input: { firstName: $firstName, lastName: $lastName }) {
+							mutation UpdateUser($id: ID!, $firstName: String, $lastName: String, $role: String) {
+								userDetailsUpdate(id: $id, input: { firstName: $firstName, lastName: $lastName, role: $role }) {
 									ok
 									error
 									entity {
@@ -861,6 +864,7 @@ export class Twingate implements INodeType {
 							id: userId,
 							firstName: firstName || undefined,
 							lastName: lastName || undefined,
+							role: role || undefined,
 						};
 					} else if (operation === 'delete') {
 						const userId = this.getNodeParameter('userId', i) as string;
