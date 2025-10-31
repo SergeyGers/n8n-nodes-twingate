@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "description": "n8n community node for Twingate GraphQL API integration",
     "license": "MIT",
-    "homepage": "",
+    "homepage": "https://github.com/SergeyGers/n8n-nodes-twingate",
     "keywords": [
         "n8n-community-node-package"
     ],
