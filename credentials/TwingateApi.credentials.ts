@@ -5,6 +5,8 @@ export class TwingateApi implements ICredentialType {
 
 	displayName = 'Twingate API';
 
+	icon = 'file:twingate.svg' as const;
+
 	documentationUrl = 'https://www.twingate.com/docs/api';
 
 	properties: INodeProperties[] = [
