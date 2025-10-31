@@ -10,7 +10,7 @@ export class Twingate implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Twingate',
 		name: 'twingate',
-		icon: 'file:twingate.svg',
+		icon: 'file:twingate_icon.png',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
