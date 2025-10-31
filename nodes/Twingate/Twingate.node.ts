@@ -1365,6 +1365,7 @@ export class Twingate implements INodeType {
 					url: baseURL,
 					headers: {
 						'Content-Type': 'application/json',
+						'X-API-KEY': credentials.apiToken as string,
 					},
 					body: JSON.stringify({
 						query,
