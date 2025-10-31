@@ -5,12 +5,15 @@ import type {
 	INodeTypeDescription,
 	IDataObject,
 } from 'n8n-workflow';
+import { NodeApiError } from 'n8n-workflow';
 
 export class Twingate implements INodeType {
+	usableAsTool = true;
+
 	description: INodeTypeDescription = {
 		displayName: 'Twingate',
 		name: 'twingate',
-		icon: 'file:twingate_icon.png',
+		icon: 'file:twingate.svg',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -34,28 +37,28 @@ export class Twingate implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'User',
-						value: 'user',
-					},
-					{
-						name: 'Resource',
-						value: 'resource',
+						name: 'Access Request',
+						value: 'accessRequest',
 					},
 					{
 						name: 'Connector',
 						value: 'connector',
 					},
 					{
-						name: 'Remote Network',
-						value: 'remoteNetwork',
-					},
-					{
 						name: 'Group',
 						value: 'group',
 					},
 					{
-						name: 'Access Request',
-						value: 'accessRequest',
+						name: 'Remote Network',
+						value: 'remoteNetwork',
+					},
+					{
+						name: 'Resource',
+						value: 'resource',
+					},
+					{
+						name: 'User',
+						value: 'user',
 					},
 				],
 				default: 'user',
@@ -72,6 +75,18 @@ export class Twingate implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						description: 'Create a user',
+						action: 'Create a user',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete a user',
+						action: 'Delete a user',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						description: 'Get a user by ID',
@@ -84,22 +99,10 @@ export class Twingate implements INodeType {
 						action: 'Get many users',
 					},
 					{
-						name: 'Create',
-						value: 'create',
-						description: 'Create a user',
-						action: 'Create a user',
-					},
-					{
 						name: 'Update',
 						value: 'update',
 						description: 'Update a user',
 						action: 'Update a user',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Delete a user',
-						action: 'Delete a user',
 					},
 				],
 				default: 'get',
@@ -116,6 +119,18 @@ export class Twingate implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						description: 'Create a resource',
+						action: 'Create a resource',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete a resource',
+						action: 'Delete a resource',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						description: 'Get a resource by ID',
@@ -128,22 +143,10 @@ export class Twingate implements INodeType {
 						action: 'Get many resources',
 					},
 					{
-						name: 'Create',
-						value: 'create',
-						description: 'Create a resource',
-						action: 'Create a resource',
-					},
-					{
 						name: 'Update',
 						value: 'update',
 						description: 'Update a resource',
 						action: 'Update a resource',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Delete a resource',
-						action: 'Delete a resource',
 					},
 				],
 				default: 'get',
@@ -160,6 +163,18 @@ export class Twingate implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						description: 'Create a connector',
+						action: 'Create a connector',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete a connector',
+						action: 'Delete a connector',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						description: 'Get a connector by ID',
@@ -172,22 +187,10 @@ export class Twingate implements INodeType {
 						action: 'Get many connectors',
 					},
 					{
-						name: 'Create',
-						value: 'create',
-						description: 'Create a connector',
-						action: 'Create a connector',
-					},
-					{
 						name: 'Update',
 						value: 'update',
 						description: 'Update a connector',
 						action: 'Update a connector',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Delete a connector',
-						action: 'Delete a connector',
 					},
 				],
 				default: 'get',
@@ -204,6 +207,18 @@ export class Twingate implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						description: 'Create a remote network',
+						action: 'Create a remote network',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete a remote network',
+						action: 'Delete a remote network',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						description: 'Get a remote network by ID',
@@ -216,22 +231,10 @@ export class Twingate implements INodeType {
 						action: 'Get many remote networks',
 					},
 					{
-						name: 'Create',
-						value: 'create',
-						description: 'Create a remote network',
-						action: 'Create a remote network',
-					},
-					{
 						name: 'Update',
 						value: 'update',
 						description: 'Update a remote network',
 						action: 'Update a remote network',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Delete a remote network',
-						action: 'Delete a remote network',
 					},
 				],
 				default: 'get',
@@ -248,6 +251,18 @@ export class Twingate implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						description: 'Create a group',
+						action: 'Create a group',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete a group',
+						action: 'Delete a group',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						description: 'Get a group by ID',
@@ -260,22 +275,10 @@ export class Twingate implements INodeType {
 						action: 'Get many groups',
 					},
 					{
-						name: 'Create',
-						value: 'create',
-						description: 'Create a group',
-						action: 'Create a group',
-					},
-					{
 						name: 'Update',
 						value: 'update',
 						description: 'Update a group',
 						action: 'Update a group',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Delete a group',
-						action: 'Delete a group',
 					},
 				],
 				default: 'get',
@@ -373,6 +376,7 @@ export class Twingate implements INodeType {
 					},
 				},
 				default: '',
+				placeholder: 'name@email.com',
 				required: true,
 				description: 'Email address of the user',
 			},
@@ -421,6 +425,10 @@ export class Twingate implements INodeType {
 						type: 'options',
 						options: [
 							{
+								name: 'Access Reviewer',
+								value: 'ACCESS_REVIEWER',
+							},
+							{
 								name: 'Admin',
 								value: 'ADMIN',
 							},
@@ -429,16 +437,12 @@ export class Twingate implements INodeType {
 								value: 'DEVOPS',
 							},
 							{
-								name: 'Support',
-								value: 'SUPPORT',
-							},
-							{
-								name: 'Access Reviewer',
-								value: 'ACCESS_REVIEWER',
-							},
-							{
 								name: 'Member',
 								value: 'MEMBER',
+							},
+							{
+								name: 'Support',
+								value: 'SUPPORT',
 							},
 						],
 						default: 'MEMBER',
@@ -750,6 +754,7 @@ export class Twingate implements INodeType {
 				description: 'Max number of results to return',
 			},
 		],
+		usableAsTool: true,
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -1355,21 +1360,22 @@ export class Twingate implements INodeType {
 					}
 				}
 
-				const response = await this.helpers.request({
+				const response = await this.helpers.httpRequest({
 					method: 'POST',
 					url: baseURL,
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: {
+					body: JSON.stringify({
 						query,
 						variables,
-					},
-					json: true,
+					}),
 				});
 
 				if (response.errors) {
-					throw new Error(`GraphQL Error: ${JSON.stringify(response.errors)}`);
+					throw new NodeApiError(this.getNode(), {
+						message: `GraphQL Error: ${JSON.stringify(response.errors)}`,
+					});
 				}
 
 				// Extract the actual data based on the operation
@@ -1394,10 +1400,15 @@ export class Twingate implements INodeType {
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {
-					returnData.push({ error: error.message });
+					returnData.push({ error: error instanceof Error ? error.message : String(error) });
 					continue;
 				}
-				throw error;
+				if (error instanceof NodeApiError) {
+					throw error;
+				}
+				throw new NodeApiError(this.getNode(), {
+					message: error instanceof Error ? error.message : String(error),
+				});
 			}
 		}
 
