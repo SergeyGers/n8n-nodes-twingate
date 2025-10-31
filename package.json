@@ -1,7 +1,7 @@
 {
     "name": "n8n-nodes-twingate",
     "version": "0.1.0",
-    "description": "",
+    "description": "n8n community node for Twingate GraphQL API integration",
     "license": "MIT",
     "homepage": "",
     "keywords": [
@@ -30,9 +30,11 @@
     "n8n": {
         "n8nNodesApiVersion": 1,
         "strict": true,
-        "credentials": [],
+        "credentials": [
+            "dist/credentials/TwingateApi.credentials.js"
+        ],
         "nodes": [
-            "dist/nodes/Example/Example.node.js"
+            "dist/nodes/Twingate/Twingate.node.js"
         ]
     },
     "devDependencies": {
