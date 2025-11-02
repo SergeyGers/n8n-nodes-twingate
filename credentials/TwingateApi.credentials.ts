@@ -42,14 +42,14 @@ export class TwingateApi implements ICredentialType {
 	};
 
 	test: ICredentialTestRequest = {
-			request: {
-				url: '={{"https://" + $credentials.networkName + ".twingate.com/api/graphql/"}}',
-				method: 'POST',
+		request: {
+			url: '={{"https://" + $credentials.networkName + ".twingate.com/api/graphql/"}}',
+			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				'X-API-KEY': '={{$credentials.apiToken}}',
 			},
-			body: '={{ JSON.stringify({ query: "query { users(first: 1) { edges { node { id } } } }", variables: {} }) }}',
+			body: '={{ JSON.stringify({ query: "query TestUsers { users(first: 1) { edges { node { id } } } }", variables: {}, operationName: "TestUsers" }) }}',
 		},
 	};
 }
