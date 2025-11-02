@@ -43,8 +43,8 @@ export class TwingateApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: 'https://{{$credentials.networkName}}.twingate.com/api/graphql/',
-			url: '',
+			baseURL: '={{"https://" + $credentials.networkName + ".twingate.com"}}',
+			url: '/api/graphql/',
 			method: 'POST',
 			body: {
 				query: 'query { viewer { id } }',
@@ -52,4 +52,3 @@ export class TwingateApi implements ICredentialType {
 		},
 	};
 }
-
