@@ -1108,7 +1108,6 @@ export class Twingate implements INodeType {
 								remoteNetwork(id: $id) {
 									id
 									name
-									type
 									location
 									createdAt
 									updatedAt
@@ -1126,7 +1125,6 @@ export class Twingate implements INodeType {
 										node {
 											id
 											name
-											type
 											location
 											createdAt
 											updatedAt
