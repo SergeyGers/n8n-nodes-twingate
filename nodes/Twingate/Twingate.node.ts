@@ -1367,20 +1367,36 @@ export class Twingate implements INodeType {
 						'Content-Type': 'application/json',
 						'X-API-KEY': credentials.apiToken as string,
 					},
-					body: JSON.stringify({
+					body: {
 						query,
 						variables,
-					}),
+					},
+					json: true,
+					returnFullResponse: true,
+					ignoreHttpStatusCodes: true,
 				});
 
-				if (response.errors) {
-					throw new NodeApiError(this.getNode(), {
-						message: `GraphQL Error: ${JSON.stringify(response.errors)}`,
+				const { statusCode, body: responseBody } = response as {
+					statusCode: number;
+					body: { errors?: IDataObject[]; data?: IDataObject };
+				};
+
+				if (statusCode >= 400 || responseBody.errors) {
+					const errorMessages = (responseBody.errors ?? [])
+						.map((err) => (err as IDataObject).message)
+						.filter(Boolean) as string[];
+
+					throw new NodeApiError(this.getNode(), responseBody.errors ?? responseBody, {
+						message:
+							errorMessages.length > 0
+								? `GraphQL Error: ${errorMessages.join(' | ')}`
+								: `Request failed with status code ${statusCode}`,
+						httpCode: statusCode?.toString(),
 					});
 				}
 
 				// Extract the actual data based on the operation
-				let result = response.data;
+				let result = responseBody.data ?? {};
 				const dataKey = Object.keys(result)[0];
 				if (result[dataKey]) {
 					if (operation === 'getAll') {
