@@ -9,6 +9,9 @@ import type {
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 
+const isDataObject = (value: unknown): value is IDataObject =>
+	value !== null && typeof value === 'object' && !Array.isArray(value);
+
 export class Twingate implements INodeType {
 	usableAsTool = true;
 
@@ -1119,13 +1122,16 @@ export class Twingate implements INodeType {
 						query = `
 							query GetRemoteNetworks($first: Int) {
 								remoteNetworks(first: $first) {
-									nodes {
-										id
-										name
-										type
-										location
-										createdAt
-										updatedAt
+									edges {
+										node {
+											id
+											name
+											type
+											location
+											createdAt
+											updatedAt
+										}
+										cursor
 									}
 									pageInfo {
 										hasNextPage
@@ -1411,37 +1417,38 @@ export class Twingate implements INodeType {
 
 					if (operation === 'getAll') {
 						if (Array.isArray(value)) {
-							resultData = value;
+							resultData = value.filter((item): item is IDataObject => isDataObject(item));
 						} else if (value) {
 							const collection = value as IDataObject;
 							if (Array.isArray(collection.edges)) {
-								resultData = (collection.edges as IDataObject[]).map((edge) => ({
-									...(edge.node as IDataObject),
-								}));
+								resultData = (collection.edges as IDataObject[])
+									.map((edge) => (isDataObject(edge.node) ? edge.node : undefined))
+									.filter((node): node is IDataObject => node !== undefined);
 							} else if (Array.isArray(collection.nodes)) {
-								resultData = collection.nodes as IDataObject[];
-							} else {
+								resultData = (collection.nodes as unknown[])
+									.filter((node): node is IDataObject => isDataObject(node));
+							} else if (isDataObject(collection)) {
 								resultData = [collection];
 							}
 						}
 					} else if (value && (value as IDataObject).entity) {
 						const entity = (value as IDataObject).entity;
 						if (Array.isArray(entity)) {
-							resultData = entity as IDataObject[];
-						} else if (entity) {
+							resultData = (entity as unknown[]).filter((item): item is IDataObject =>
+								isDataObject(item),
+							);
+						} else if (isDataObject(entity)) {
 							resultData = entity as IDataObject;
 						}
-					} else if (value) {
-						resultData = value as IDataObject;
+					} else if (isDataObject(value)) {
+						resultData = value;
 					}
 
 					if (Array.isArray(resultData)) {
 						returnData.push(
-							...resultData.filter(
-								(item): item is IDataObject => item !== undefined,
-							),
+							...resultData.filter((item): item is IDataObject => isDataObject(item)),
 						);
-					} else if (resultData) {
+					} else if (resultData && isDataObject(resultData)) {
 						returnData.push(resultData);
 					}
 				}
