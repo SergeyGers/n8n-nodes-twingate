@@ -1400,9 +1400,9 @@ export class Twingate implements INodeType {
 						result = result[dataKey];
 					}
 
-					Array.isArray(result)
-						? returnData.push(...(result as IDataObject[]))
-						: returnData.push(result as IDataObject);
+          (Array.isArray(result)
+            ? returnData.push(...(result as IDataObject[]))
+            : returnData.push(result as IDataObject));
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {
