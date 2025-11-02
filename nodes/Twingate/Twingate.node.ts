@@ -1117,13 +1117,13 @@ export class Twingate implements INodeType {
 						query = `
 							query GetRemoteNetworks($first: Int) {
 								remoteNetworks(first: $first) {
-									edges {
-										node {
-											id
-											name
-											type
-											location
-										}
+									nodes {
+										id
+										name
+										type
+										location
+										createdAt
+										updatedAt
 									}
 									pageInfo {
 										hasNextPage
@@ -1383,21 +1383,26 @@ export class Twingate implements INodeType {
 				let result = response.data;
 				const dataKey = Object.keys(result)[0];
 				if (result[dataKey]) {
-					if (operation === 'getAll' && result[dataKey].edges) {
-						result = result[dataKey].edges.map((edge: IDataObject) => edge.node);
-					} else if (operation === 'getAll' && result[dataKey]) {
-						result = Array.isArray(result[dataKey]) ? result[dataKey] : [result[dataKey]];
-					} else if (result[dataKey].entity) {
-						result = result[dataKey].entity;
-					} else if (result[dataKey]) {
+					if (operation === 'getAll') {
+						const collection = result[dataKey] as IDataObject;
+						if (Array.isArray(collection)) {
+							result = collection;
+						} else if (collection?.edges) {
+							result = (collection.edges as IDataObject[]).map((edge) => edge.node);
+						} else if (collection?.nodes) {
+							result = collection.nodes;
+						} else {
+							result = [collection];
+						}
+					} else if ((result[dataKey] as IDataObject).entity) {
+						result = (result[dataKey] as IDataObject).entity;
+					} else {
 						result = result[dataKey];
 					}
 
-					if (Array.isArray(result)) {
-						returnData.push(...result);
-					} else {
-						returnData.push(result as IDataObject);
-					}
+					Array.isArray(result)
+						? returnData.push(...(result as IDataObject[]))
+						: returnData.push(result as IDataObject);
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {
@@ -1416,4 +1421,3 @@ export class Twingate implements INodeType {
 		return [this.helpers.returnJsonArray(returnData)];
 	}
 }
-
