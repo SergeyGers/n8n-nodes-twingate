@@ -46,6 +46,10 @@ export class TwingateApi implements ICredentialType {
 			baseURL: '={{"https://" + $credentials.networkName + ".twingate.com"}}',
 			url: '/api/graphql/',
 			method: 'POST',
+			json: true,
+			headers: {
+				'Content-Type': 'application/json',
+			},
 			body: {
 				query: 'query { viewer { id } }',
 			},
