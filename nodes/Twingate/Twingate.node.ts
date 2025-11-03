@@ -774,6 +774,7 @@ export class Twingate implements INodeType {
 			try {
 				let query = '';
 				let variables: IDataObject = {};
+				let shouldPaginate = false;
 
 				if (resource === 'user') {
 					if (operation === 'get') {
@@ -798,8 +799,8 @@ export class Twingate implements INodeType {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i) as number);
 						query = `
-							query GetUsers($first: Int) {
-								users(first: $first) {
+							query GetUsers($first: Int, $after: String) {
+								users(first: $first, after: $after) {
 									edges {
 										node {
 											id
@@ -821,6 +822,7 @@ export class Twingate implements INodeType {
 							}
 						`;
 						variables = { first: limit };
+						shouldPaginate = returnAll;
 					} else if (operation === 'create') {
 						const email = this.getNodeParameter('email', i) as string;
 						const firstName = this.getNodeParameter('firstName', i) as string;
@@ -914,8 +916,8 @@ export class Twingate implements INodeType {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i) as number);
 						query = `
-							query GetResources($first: Int) {
-								resources(first: $first) {
+							query GetResources($first: Int, $after: String) {
+								resources(first: $first, after: $after) {
 									edges {
 										node {
 											id
@@ -938,6 +940,7 @@ export class Twingate implements INodeType {
 							}
 						`;
 						variables = { first: limit };
+						shouldPaginate = returnAll;
 					} else if (operation === 'create') {
 						const name = this.getNodeParameter('name', i) as string;
 						const address = this.getNodeParameter('address', i) as string;
@@ -1021,8 +1024,8 @@ export class Twingate implements INodeType {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i) as number);
 						query = `
-							query GetConnectors($first: Int) {
-								connectors(first: $first) {
+							query GetConnectors($first: Int, $after: String) {
+								connectors(first: $first, after: $after) {
 									edges {
 										node {
 											id
@@ -1042,6 +1045,7 @@ export class Twingate implements INodeType {
 							}
 						`;
 						variables = { first: limit };
+						shouldPaginate = returnAll;
 					} else if (operation === 'create') {
 						const name = this.getNodeParameter('name', i) as string;
 						const remoteNetworkId = this.getNodeParameter('remoteNetworkId', i) as string;
@@ -1119,8 +1123,8 @@ export class Twingate implements INodeType {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i) as number);
 						query = `
-							query GetRemoteNetworks($first: Int) {
-								remoteNetworks(first: $first) {
+							query GetRemoteNetworks($first: Int, $after: String) {
+								remoteNetworks(first: $first, after: $after) {
 									edges {
 										node {
 											id
@@ -1139,6 +1143,7 @@ export class Twingate implements INodeType {
 							}
 						`;
 						variables = { first: limit };
+						shouldPaginate = returnAll;
 					} else if (operation === 'create') {
 						const name = this.getNodeParameter('name', i) as string;
 						query = `
@@ -1210,8 +1215,8 @@ export class Twingate implements INodeType {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i) as number);
 						query = `
-							query GetGroups($first: Int) {
-								groups(first: $first) {
+							query GetGroups($first: Int, $after: String) {
+								groups(first: $first, after: $after) {
 									edges {
 										node {
 											id
@@ -1227,6 +1232,7 @@ export class Twingate implements INodeType {
 							}
 						`;
 						variables = { first: limit };
+						shouldPaginate = returnAll;
 					} else if (operation === 'create') {
 						const name = this.getNodeParameter('name', i) as string;
 						query = `
@@ -1307,8 +1313,8 @@ export class Twingate implements INodeType {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						const limit = returnAll ? 1000 : (this.getNodeParameter('limit', i) as number);
 						query = `
-							query GetAccessRequests($first: Int) {
-								accessRequests(first: $first) {
+							query GetAccessRequests($first: Int, $after: String) {
+								accessRequests(first: $first, after: $after) {
 									edges {
 										node {
 											id
@@ -1333,6 +1339,7 @@ export class Twingate implements INodeType {
 							}
 						`;
 						variables = { first: limit };
+						shouldPaginate = returnAll;
 					} else if (operation === 'approve') {
 						const accessRequestId = this.getNodeParameter('accessRequestId', i) as string;
 						query = `
@@ -1366,90 +1373,115 @@ export class Twingate implements INodeType {
 					}
 				}
 
-				const response = (await this.helpers.httpRequest({
-					method: 'POST',
-					url: baseURL,
-					headers: {
-						'Content-Type': 'application/json',
-						'X-API-KEY': credentials.apiToken as string,
-					},
-					body: {
-						query,
-						variables,
-					},
-					json: true,
-					returnFullResponse: true,
-					ignoreHttpStatusErrors: true,
-				})) as IN8nHttpFullResponse;
+				let cursor: string | undefined;
+				let hasNextPageFlag = false;
 
-				const statusCode = response.statusCode ?? 200;
-				const responseBody = (response.body ?? {}) as {
-					errors?: IDataObject[];
-					data?: IDataObject;
-				};
-				const errors = Array.isArray(responseBody.errors)
-					? (responseBody.errors.filter((err): err is JsonObject => Boolean(err)) as JsonObject[])
-					: [];
+				do {
+					const requestVariables: IDataObject = { ...variables };
+					if (shouldPaginate && cursor) {
+						requestVariables.after = cursor;
+					}
 
-				if (statusCode >= 400 || errors.length > 0) {
-					const errorMessages = errors
-						.map((err) => (err?.message as string | undefined) ?? '')
-						.filter((message): message is string => Boolean(message));
+					const response = (await this.helpers.httpRequest({
+						method: 'POST',
+						url: baseURL,
+						headers: {
+							'Content-Type': 'application/json',
+							'X-API-KEY': credentials.apiToken as string,
+						},
+						body: {
+							query,
+							variables: requestVariables,
+						},
+						json: true,
+						returnFullResponse: true,
+						ignoreHttpStatusErrors: true,
+					})) as IN8nHttpFullResponse;
 
-					const errorPayload: JsonObject = errors.length > 0 ? { errors } : { statusCode };
+					const statusCode = response.statusCode ?? 200;
+					const responseBody = (response.body ?? {}) as {
+						errors?: IDataObject[];
+						data?: IDataObject;
+					};
+					const errors = Array.isArray(responseBody.errors)
+						? (responseBody.errors.filter((err): err is JsonObject => Boolean(err)) as JsonObject[])
+						: [];
 
-					throw new NodeApiError(this.getNode(), errorPayload, {
-						message:
-							errorMessages.length > 0
-								? `GraphQL Error: ${errorMessages.join(' | ')}`
-								: `Request failed with status code ${statusCode}`,
-						httpCode: statusCode.toString(),
-					});
-				}
+					if (statusCode >= 400 || errors.length > 0) {
+						const errorMessages = errors
+							.map((err) => (err?.message as string | undefined) ?? '')
+							.filter((message): message is string => Boolean(message));
 
-				const data = (responseBody.data ?? {}) as IDataObject;
-				const dataKey = Object.keys(data)[0];
-				if (dataKey) {
-					const value = data[dataKey] as IDataObject | IDataObject[] | undefined;
-					let resultData: IDataObject | IDataObject[] | undefined;
+						const errorPayload: JsonObject = errors.length > 0 ? { errors } : { statusCode };
 
-					if (operation === 'getAll') {
-						if (Array.isArray(value)) {
-							resultData = value.filter((item): item is IDataObject => isDataObject(item));
-						} else if (value) {
-							const collection = value as IDataObject;
-							if (Array.isArray(collection.edges)) {
-								resultData = (collection.edges as IDataObject[])
-									.map((edge) => (isDataObject(edge.node) ? edge.node : undefined))
-									.filter((node): node is IDataObject => node !== undefined);
-							} else if (Array.isArray(collection.nodes)) {
-								resultData = (collection.nodes as unknown[])
-									.filter((node): node is IDataObject => isDataObject(node));
-							} else if (isDataObject(collection)) {
-								resultData = [collection];
+						throw new NodeApiError(this.getNode(), errorPayload, {
+							message:
+								errorMessages.length > 0
+									? `GraphQL Error: ${errorMessages.join(' | ')}`
+									: `Request failed with status code ${statusCode}`,
+							httpCode: statusCode.toString(),
+						});
+					}
+
+					const data = (responseBody.data ?? {}) as IDataObject;
+					const dataKey = Object.keys(data)[0];
+					let nextCursorValue: string | undefined;
+					let nextHasNextPage = false;
+
+					if (dataKey) {
+						const value = data[dataKey] as IDataObject | IDataObject[] | undefined;
+						let resultData: IDataObject | IDataObject[] | undefined;
+
+						if (operation === 'getAll') {
+							if (Array.isArray(value)) {
+								resultData = value.filter((item): item is IDataObject => isDataObject(item));
+							} else if (value && isDataObject(value)) {
+								const collection = value;
+								if (Array.isArray(collection.edges)) {
+									resultData = (collection.edges as IDataObject[])
+										.map((edge) => (isDataObject(edge.node) ? edge.node : undefined))
+										.filter((node): node is IDataObject => node !== undefined);
+								} else if (Array.isArray(collection.nodes)) {
+									resultData = (collection.nodes as unknown[])
+										.filter((node): node is IDataObject => isDataObject(node));
+								} else if (isDataObject(collection)) {
+									resultData = [collection];
+								}
+
+								if (isDataObject(collection.pageInfo)) {
+									const pageInfo = collection.pageInfo as IDataObject;
+									nextHasNextPage = pageInfo.hasNextPage === true;
+									const possibleCursor = pageInfo.endCursor;
+									if (typeof possibleCursor === 'string' && possibleCursor.length > 0) {
+										nextCursorValue = possibleCursor;
+									}
+								}
 							}
+						} else if (value && isDataObject(value) && value.entity) {
+							const entity = value.entity;
+							if (Array.isArray(entity)) {
+								resultData = (entity as unknown[]).filter((item): item is IDataObject =>
+									isDataObject(item),
+								);
+							} else if (isDataObject(entity)) {
+								resultData = entity;
+							}
+						} else if (isDataObject(value)) {
+							resultData = value;
 						}
-					} else if (value && (value as IDataObject).entity) {
-						const entity = (value as IDataObject).entity;
-						if (Array.isArray(entity)) {
-							resultData = (entity as unknown[]).filter((item): item is IDataObject =>
-								isDataObject(item),
+
+						if (Array.isArray(resultData)) {
+							returnData.push(
+								...resultData.filter((item): item is IDataObject => isDataObject(item)),
 							);
-						} else if (isDataObject(entity)) {
-							resultData = entity as IDataObject;
+						} else if (resultData && isDataObject(resultData)) {
+							returnData.push(resultData);
 						}
-					} else if (isDataObject(value)) {
-						resultData = value;
 					}
 
-					if (Array.isArray(resultData)) {
-						returnData.push(
-							...resultData.filter((item): item is IDataObject => isDataObject(item)),
-						);
-					} else if (resultData && isDataObject(resultData)) {
-						returnData.push(resultData);
-					}
-				}
+					cursor = nextCursorValue;
+					hasNextPageFlag = Boolean(shouldPaginate && nextHasNextPage && cursor);
+				} while (shouldPaginate && hasNextPageFlag);
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({ error: error instanceof Error ? error.message : String(error) });
